@@ -1,0 +1,28 @@
+// {{ ansible_managed }}
+logging {
+    channel default_log {
+        file "{{ bind_resolver_log_dir }}/default.log" versions 3 size 5m;
+        severity info;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+
+    channel query_log {
+        file "{{ bind_resolver_log_dir }}/query.log" versions 5 size 10m;
+        severity info;
+        print-time yes;
+    };
+
+    channel security_log {
+        file "{{ bind_resolver_log_dir }}/security.log" versions 3 size 5m;
+        severity info;    // denied queries are logged at info
+        print-time yes;
+        print-severity yes;
+    };
+
+    category default { default_log; };
+    category queries { query_log; };
+    category security { security_log; };
+    category client { security_log; };
+};

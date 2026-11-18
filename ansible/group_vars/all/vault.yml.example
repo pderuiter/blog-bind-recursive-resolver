@@ -1,0 +1,4 @@
+---
+# This setup has no secrets: access is controlled by the "trusted" ACL.
+# The file exists so every companion repo has the same layout.
+{}

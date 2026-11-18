@@ -1,0 +1,31 @@
+---
+# Networks allowed to use the resolver (acl "trusted")
+bind_resolver_trusted:
+  - localhost
+  - localnets
+  - 192.168.0.0/16
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+
+bind_resolver_max_cache_size: 256m
+bind_resolver_max_cache_ttl: 86400
+bind_resolver_max_ncache_ttl: 3600
+bind_resolver_querylog: false
+
+bind_resolver_rrl_responses_per_second: 10
+bind_resolver_rrl_window: 5
+
+# Section 4 (optional): leave empty for full recursion from the root
+bind_resolver_forwarders: []
+#  - 1.1.1.1        # Cloudflare
+#  - 8.8.8.8        # Google
+#  - 9.9.9.9        # Quad9
+bind_resolver_forward: first
+
+# Section 5: file logging
+bind_resolver_log_dir: /var/log/named
+
+# Section 6: download current root hints and point the existing hint zone at them.
+# Set to false to keep the hints the package ships.
+bind_resolver_update_root_hints: true
+bind_resolver_root_hints_url: https://www.internic.net/domain/named.root

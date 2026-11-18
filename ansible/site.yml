@@ -1,0 +1,6 @@
+---
+- name: Caching recursive BIND resolver
+  hosts: resolvers
+  gather_facts: true
+  roles:
+    - role: bind_resolver

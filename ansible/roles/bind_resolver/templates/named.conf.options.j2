@@ -1,0 +1,75 @@
+// {{ ansible_managed }}
+// Define trusted networks
+acl "trusted" {
+{% for net in bind_resolver_trusted %}
+    {{ net }};
+{% endfor %}
+};
+
+options {
+    directory "{{ bind_directory }}";
+{% for line in bind_platform_options %}
+    {{ line }}
+{% endfor %}
+
+    // Network interface settings
+    listen-on port 53 { any; };
+    listen-on-v6 port 53 { any; };
+
+    // Recursion settings - CRITICAL for security
+    recursion yes;
+    allow-recursion { trusted; };
+    allow-query { trusted; };
+    allow-query-cache { trusted; };
+
+    // Disable zone transfers (not needed for resolver)
+    allow-transfer { none; };
+
+    // DNSSEC validation
+    dnssec-validation auto;
+
+    // Source port randomization is on by default - don't set
+    // query-source ... port (the 'port' token is deprecated)
+
+    // Performance tuning
+    max-cache-size {{ bind_resolver_max_cache_size }};
+    max-cache-ttl {{ bind_resolver_max_cache_ttl }};
+    max-ncache-ttl {{ bind_resolver_max_ncache_ttl }};
+
+    // Prevent amplification attacks
+    minimal-responses yes;
+
+    // Hide version string
+    version "not disclosed";
+
+    // Logging
+    querylog {{ 'yes' if bind_resolver_querylog else 'no' }};
+
+    // Prevent loopback/localhost attacks
+    deny-answer-addresses {
+        127.0.0.0/8;
+        ::1/128;
+    } except-from { "none"; };
+
+    // Rate limiting to prevent abuse
+    rate-limit {
+        responses-per-second {{ bind_resolver_rrl_responses_per_second }};
+        window {{ bind_resolver_rrl_window }};
+    };
+
+    // Keep the built-in empty zones for RFC 1918 and other
+    // reserved reverse ranges (stops those queries leaking upstream)
+    empty-zones-enable yes;
+{% if bind_resolver_forwarders | length > 0 %}
+
+    // Forward to upstream resolvers
+    forwarders {
+{% for fwd in bind_resolver_forwarders %}
+        {{ fwd }};
+{% endfor %}
+    };
+
+    // Forward {{ bind_resolver_forward }}{{ ', then recurse if forwarders fail' if bind_resolver_forward == 'first' else ', no fallback recursion' }}
+    forward {{ bind_resolver_forward }};
+{% endif %}
+};

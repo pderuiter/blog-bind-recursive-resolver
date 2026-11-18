@@ -1,0 +1,3 @@
+---
+bind_resolver_root_hints_file: /var/cache/bind/named.root
+bind_resolver_default_zones_file: /etc/bind/named.conf.default-zones

@@ -1,0 +1,15 @@
+---
+# Networks allowed to use the resolver. The post's list:
+bind_resolver_trusted:
+  - localhost
+  - localnets
+  - 192.168.0.0/16
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+
+# Optional forwarding (section 4). Empty = full recursion from the root servers.
+bind_resolver_forwarders: []
+bind_resolver_forward: first
+
+# Download current root hints from InterNIC (section 6)
+bind_resolver_update_root_hints: true

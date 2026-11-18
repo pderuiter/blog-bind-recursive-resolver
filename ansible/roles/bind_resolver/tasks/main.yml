@@ -1,0 +1,56 @@
+---
+- name: Load distribution-specific settings
+  ansible.builtin.include_vars: "{{ ansible_facts['os_family'] }}.yml"
+
+- name: Create the log directory
+  ansible.builtin.file:
+    path: "{{ bind_resolver_log_dir }}"
+    state: directory
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: "0755"
+
+- name: Download current root hints
+  ansible.builtin.get_url:
+    url: "{{ bind_resolver_root_hints_url }}"
+    dest: "{{ bind_resolver_root_hints_file }}"
+    owner: root
+    group: "{{ bind_group }}"
+    mode: "0644"
+  when: bind_resolver_update_root_hints
+  notify: Bind config changed
+
+- name: Point the existing hint zone at the new root hints (Debian/Ubuntu)
+  ansible.builtin.replace:
+    path: "{{ bind_resolver_default_zones_file }}"
+    after: 'zone "\." \{'
+    before: '\};'
+    regexp: '^(\s*file\s+)"[^"]+";'
+    replace: '\1"{{ bind_resolver_root_hints_file }}";'
+  when:
+    - bind_resolver_update_root_hints
+    - ansible_facts['os_family'] == 'Debian'
+  notify: Bind config changed
+
+- name: Write the resolver options
+  ansible.builtin.template:
+    src: named.conf.options.j2
+    dest: "{{ bind_options_conf }}"
+    owner: root
+    group: "{{ bind_group }}"
+    mode: "0640"
+  notify: Bind config changed
+
+- name: Write the logging configuration
+  ansible.builtin.template:
+    src: named.conf.local.j2
+    dest: "{{ bind_local_conf }}"
+    owner: root
+    group: "{{ bind_group }}"
+    mode: "0640"
+  notify: Bind config changed
+
+- name: Start named with the new configuration
+  ansible.builtin.include_role:
+    name: bind
+    tasks_from: start
